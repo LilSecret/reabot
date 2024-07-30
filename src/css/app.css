@@ -1,0 +1,124 @@
+.reabot-container {
+  display: block;
+  background-color: var(--clr-primary-200);
+  border-radius: 13px;
+  max-width: 450px;
+  position: absolute;
+  transform: scale(0);
+  right: -150px;
+  transition: 300ms ease;
+  bottom: -20%;
+
+  &.active {
+    transform: scale(1);
+    right: 30px;
+    bottom: 110px;
+  }
+}
+
+.reabot-header {
+  background-color: var(--clr-neutral-900);
+  border-top-left-radius: 13px;
+  padding: 12px 22px;
+  border-top-right-radius: 13px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--clr-neutral-100);
+  font-family: var(--ff-accent);
+}
+
+.header-reabot-profile {
+  width: 50px;
+  padding: 2px;
+  border-radius: 50rem;
+  background-color: var(--clr-accent-200);
+}
+
+.header-title {
+  font-weight: 400;
+}
+
+.reabot-content {
+  padding: 22px;
+  background-color: var(--clr-neutral-100);
+  min-height: 400px;
+}
+
+.reabot-form {
+  padding: 18px 22px;
+  background-color: var(--clr-primary-200);
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+
+  border-bottom-left-radius: 13px;
+  border-bottom-right-radius: 13px;
+
+  & input {
+    outline: none;
+    border: none;
+    font-weight: 18px;
+    background-color: transparent;
+    color: var(--clr-primary-900);
+    flex: 1;
+  }
+}
+
+.reabot-form-btn {
+  background-color: transparent;
+  cursor: pointer;
+  color: var(--clr-primary-900);
+  opacity: 0.9;
+  font-size: 1.2rem;
+  outline: none;
+  border: none;
+
+  &:hover {
+    color: var(--clr-accent-900);
+  }
+}
+
+/* ### Button ### */
+.reabot-btn {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  bottom: 45px;
+  padding: 10px;
+  right: 45px;
+  width: 50px;
+  height: 50px;
+  border: none;
+  cursor: pointer;
+  background-color: var(--clr-accent-400);
+  border-radius: 100rem;
+  color: var(--clr-primary-900);
+  transition: 300ms ease;
+  font-size: 1.5rem;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+
+  &.active .assistant-icon-btn {
+    transform: rotate(45deg) scale(0);
+  }
+
+  &:not(.active) .exit-icon {
+    transform: rotate(-45deg) scale(0);
+  }
+}
+
+.assistant-icon-btn {
+  width: 75%;
+}
+
+.assistant-icon-btn,
+.exit-icon {
+  transform: rotate(0deg) scale(1);
+  transition: 300ms ease;
+  pointer-events: none;
+  position: absolute;
+}

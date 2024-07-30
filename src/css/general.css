@@ -1,0 +1,32 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Mitr:wght@200;300;400;500;600;700&display=swap");
+
+#root {
+  position: relative;
+  min-height: 100vh;
+}
+
+:root {
+  --clr-neutral-100: #f7f9f2;
+  --clr-neutral-900: #0e2132;
+
+  --clr-primary-200: #72d3ff;
+  --clr-primary-400: #49c7ff;
+  --clr-primary-900: #0e2132;
+
+  --clr-accent-100: #f7dcb9;
+  --clr-accent-200: #dcc19e;
+  --clr-accent-400: #deac80;
+  --clr-accent-900: #876648;
+
+  --ff-base: "Inter", sans-serif;
+  --ff-accent: "Mitr", sans-serif;
+}
+
+body {
+  font-family: var(--ff-base);
+}
+
+::placeholder {
+  color: var(--clr-primary-900);
+  opacity: 0.85;
+}
