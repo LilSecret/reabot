@@ -1,8 +1,9 @@
 import { ReactNode } from "react";
+import { TMessageType } from "../../types";
 
 type TProps = {
-  type: "Bot" | "User";
-  children: string | ReactNode;
+  type: TMessageType;
+  children: ReactNode;
 };
 
 function Message({ type, children }: TProps) {
