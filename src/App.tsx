@@ -3,6 +3,7 @@ import "./css/app.css";
 import { faPaperPlane, faX } from "@fortawesome/free-solid-svg-icons";
 import { FormEvent, useState } from "react";
 import BotMessagesWrapper from "./components/Message/BotMessagesWrapper";
+import Message from "./components/Message/Message";
 
 function App() {
   const [reabotActive, setReabotActive] = useState(false);
@@ -28,7 +29,15 @@ function App() {
           <h3 className="header-title">ReaBot</h3>
         </header>
         <div className="reabot-content">
-          <BotMessagesWrapper />
+          <BotMessagesWrapper>
+            <Message type="Bot">How are you doing?</Message>
+          </BotMessagesWrapper>
+          <Message type="User">I am doing good</Message>
+          <BotMessagesWrapper>
+            <Message type="Bot">
+              I'm so glad to hear. Can I help you with anything else?
+            </Message>
+          </BotMessagesWrapper>
         </div>
         <form className="reabot-form" onSubmit={handleForm}>
           <input type="text" placeholder="Enter your message" />

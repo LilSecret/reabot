@@ -1,6 +1,6 @@
-import Message from "./Message";
+import { ReactNode } from "react";
 
-function BotMessagesWrapper() {
+function BotMessagesWrapper({ children }: { children: ReactNode }) {
   return (
     <>
       <img
@@ -8,10 +8,7 @@ function BotMessagesWrapper() {
         src="/reabot-profile.png"
         alt="ReaBot profile"
       />
-      <Message
-        type="Bot"
-        children="Hello there! I'm ReaBot. How are you doing Kevin?"
-      />
+      {children}
       {/* <Message type="User" children="I am doing wonderful" /> */}
     </>
   );

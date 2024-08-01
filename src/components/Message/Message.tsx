@@ -8,7 +8,7 @@ type TProps = {
 function Message({ type, children }: TProps) {
   return (
     <div className="message" data-type={type}>
-      {typeof children === "string" ? <p>{children}</p> : children}
+      {children}
     </div>
   );
 }
