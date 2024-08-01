@@ -12,7 +12,7 @@
   &.active {
     transform: scale(1);
     right: 25px;
-    bottom: 110px;
+    bottom: 80px;
   }
 }
 
@@ -139,7 +139,7 @@
 }
 
 .message {
-  max-width: 90%;
+  max-width: 75%;
   margin-top: 6px;
   font-size: 1rem;
   padding: 10px;
@@ -153,6 +153,7 @@
 
   &[data-type="Bot"] {
     border-top-left-radius: 4px;
+    align-self: start;
     background-color: var(--clr-accent-200);
   }
 }
