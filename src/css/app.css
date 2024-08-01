@@ -40,9 +40,11 @@
 }
 
 .reabot-content {
-  padding: 22px;
+  padding: 10px;
   background-color: var(--clr-neutral-100);
   min-height: 400px;
+  display: flex;
+  flex-direction: column;
 }
 
 .reabot-form {
@@ -121,4 +123,34 @@
   transition: 300ms ease;
   pointer-events: none;
   position: absolute;
+}
+
+.link {
+  cursor: pointer;
+  color: var(--clr-primary-900);
+}
+
+/* Messages  */
+.message-wrapper-img {
+  border-radius: 50rem;
+  width: 20px;
+}
+
+.message {
+  max-width: 90%;
+  margin-top: 6px;
+  font-size: 1rem;
+  padding: 10px;
+  border-radius: 12px;
+
+  &[data-type="User"] {
+    border-top-right-radius: 4px;
+    align-self: end;
+    background-color: var(--clr-primary-200);
+  }
+
+  &[data-type="Bot"] {
+    border-top-left-radius: 4px;
+    background-color: var(--clr-accent-200);
+  }
 }
