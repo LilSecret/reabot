@@ -1,16 +1,51 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./css/app.css";
-import { faPaperPlane, faX } from "@fortawesome/free-solid-svg-icons";
-import { FormEvent, useState } from "react";
+import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
+import { FormEvent, useEffect, useState } from "react";
 import BotMessagesWrapper from "./components/Message/BotMessagesWrapper";
 import Message from "./components/Message/Message";
+import { TMessage } from "./types";
+import toast from "react-hot-toast";
+import ReabotBtn from "./components/Reabot/ReabotBtn";
+import askOpenAI from "./OpenAPI";
 
 function App() {
   const [reabotActive, setReabotActive] = useState(false);
+  const [messages, setMessages] = useState<TMessage[]>([]);
+  const [inputValue, setInputValue] = useState("");
+  const [formIsSubmitted, setFormIsSubmitted] = useState(false);
 
-  const handleForm = (e: FormEvent<HTMLFormElement>) => {
+  const isInputValueError = inputValue.length < 5 && formIsSubmitted;
+
+  const handleForm = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setFormIsSubmitted(true);
+
+    if (isInputValueError) {
+      toast.error("Your message is to short");
+      return;
+    }
+
+    setMessages((prevItems) => [
+      ...prevItems,
+      { type: "User", content: inputValue },
+    ]);
+
+    const message = (await askOpenAI(inputValue)) as string;
+
+    setMessages((prevItems) => [
+      ...prevItems,
+      { type: "Bot", content: message },
+    ]);
+
+    setInputValue("");
   };
+
+  useEffect(() => {
+    setMessages([
+      { type: "Bot", content: "Hello I'm ReaBot. How may I assist You?" },
+    ]);
+  }, []);
 
   return (
     <>
@@ -29,39 +64,37 @@ function App() {
           <h3 className="header-title">ReaBot</h3>
         </header>
         <div className="reabot-content">
-          <BotMessagesWrapper>
-            <Message type="Bot">How are you doing?</Message>
-          </BotMessagesWrapper>
-          <Message type="User">I am doing good</Message>
-          <BotMessagesWrapper>
-            <Message type="Bot">
-              I'm so glad to hear. Can I help you with anything else?
-            </Message>
-          </BotMessagesWrapper>
+          {messages.map((message) => {
+            return message.type === "Bot" ? (
+              <BotMessagesWrapper>
+                <Message type={message.type}>{message.content}</Message>
+              </BotMessagesWrapper>
+            ) : (
+              <Message type={message.type}>{message.content}</Message>
+            );
+          })}
         </div>
         <form className="reabot-form" onSubmit={handleForm}>
-          <input type="text" placeholder="Enter your message" />
+          <input
+            className="user-input"
+            type="text"
+            onChange={(e) => {
+              setInputValue(e.target.value);
+            }}
+            placeholder="Enter your message"
+            value={inputValue}
+            data-error={isInputValueError}
+          />
           <button className="reabot-form-btn" type="submit">
             <FontAwesomeIcon icon={faPaperPlane} />
           </button>
         </form>
       </div>
 
-      <button
-        className={`reabot-btn ${reabotActive ? "active" : ""}`}
-        onClick={() => {
-          setReabotActive((prevState) => {
-            return prevState ? false : true;
-          });
-        }}
-      >
-        <FontAwesomeIcon className="exit-icon" icon={faX} />
-        <img
-          className="assistant-icon-btn"
-          src="/reabot-profile.png"
-          alt="reabot profile"
-        />
-      </button>
+      <ReabotBtn
+        reabotActive={reabotActive}
+        setReabotActive={setReabotActive}
+      />
     </>
   );
 }
