@@ -3,6 +3,11 @@
 #root {
   position: relative;
   min-height: 100vh;
+  background-image: url("/website-img.png");
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+  background-position: top;
 }
 
 :root {
