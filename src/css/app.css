@@ -157,3 +157,9 @@
     background-color: var(--clr-accent-200);
   }
 }
+
+.end-of-chat {
+  display: inline-block;
+  color: transparent;
+  width: 100%;
+}

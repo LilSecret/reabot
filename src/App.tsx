@@ -1,7 +1,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./css/app.css";
 import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
-import { FormEvent, useEffect, useState } from "react";
+import { createRef, FormEvent, useEffect, useState } from "react";
 import BotMessagesWrapper from "./components/Message/BotMessagesWrapper";
 import Message from "./components/Message/Message";
 import { TMessage } from "./types";
@@ -15,7 +15,15 @@ function App() {
   const [inputValue, setInputValue] = useState("");
   const [formIsSubmitted, setFormIsSubmitted] = useState(false);
 
+  const endOfChatRef = createRef<HTMLDivElement>();
+
   const isInputValueError = inputValue.length < 5 && formIsSubmitted;
+
+  const scrollToLastMessage = () => {
+    endOfChatRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
+  };
 
   const handleForm = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -31,14 +39,18 @@ function App() {
       { type: "User", content: inputValue },
     ]);
 
-    const message = (await askOpenAI(inputValue)) as string;
-
-    setMessages((prevItems) => [
-      ...prevItems,
-      { type: "Bot", content: message },
-    ]);
-
     setInputValue("");
+
+    askOpenAI(inputValue).then((response) => {
+      if (typeof response !== "string") {
+        throw new Error("response is not a string");
+      }
+
+      setMessages((prevItems) => [
+        ...prevItems,
+        { type: "Bot", content: response },
+      ]);
+    });
   };
 
   useEffect(() => {
@@ -46,6 +58,10 @@ function App() {
       { type: "Bot", content: "Hello I'm ReaBot. How may I assist You?" },
     ]);
   }, []);
+
+  useEffect(() => {
+    scrollToLastMessage();
+  }, [messages, scrollToLastMessage]);
 
   return (
     <>
@@ -59,20 +75,26 @@ function App() {
               className="header-img"
               src="/reabot-profile.png"
               alt="reabot profile"
+              onClick={() => {
+                scrollToLastMessage();
+              }}
             />
           </div>
           <h3 className="header-title">ReaBot</h3>
         </header>
         <div className="reabot-content">
-          {messages.map((message) => {
+          {messages.map((message, index) => {
             return message.type === "Bot" ? (
-              <BotMessagesWrapper>
+              <BotMessagesWrapper key={index}>
                 <Message type={message.type}>{message.content}</Message>
               </BotMessagesWrapper>
             ) : (
               <Message type={message.type}>{message.content}</Message>
             );
           })}
+          <div className="end-of-chat" ref={endOfChatRef}>
+            End of Chat
+          </div>
         </div>
         <form className="reabot-form" onSubmit={handleForm}>
           <input
