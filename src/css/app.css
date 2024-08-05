@@ -35,6 +35,12 @@
   background-color: var(--clr-accent-200);
 }
 
+.chat-logs {
+  display: grid;
+  width: 100%;
+  flex: 1;
+}
+
 .header-title {
   font-weight: 400;
 }
@@ -43,6 +49,7 @@
   padding: 10px;
   background-color: var(--clr-neutral-100);
   height: 400px;
+  position: relative;
   overflow-y: scroll;
   display: flex;
   flex-direction: column;
@@ -147,14 +154,22 @@
 
   &[data-type="User"] {
     border-top-right-radius: 4px;
-    align-self: end;
+    place-self: flex-end;
     background-color: var(--clr-primary-200);
+
+    &:has(+ :not(.message[data-type="User"])) {
+      margin-bottom: 10px;
+    }
   }
 
   &[data-type="Bot"] {
     border-top-left-radius: 4px;
     align-self: start;
     background-color: var(--clr-accent-200);
+
+    &:has(+ :not(.message[data-type="Bot"])) {
+      margin-bottom: 10px;
+    }
   }
 }
 
@@ -163,4 +178,67 @@
   font-size: 5px;
   color: transparent;
   width: 100%;
+}
+
+/* Thinking Cloud */
+
+.thinking-elements {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.reabot-thinking {
+  width: 35px;
+}
+
+.thinking-cloud {
+  display: inline-flex;
+  border-radius: 4px;
+  padding: 6px 8px;
+  background-color: var(--clr-accent-200);
+  position: relative;
+  bottom: 25px;
+  gap: 4px;
+}
+
+.dot {
+  width: 8px;
+  border-radius: 55rem;
+  background-color: var(--clr-primary-900);
+  opacity: 0.8;
+  aspect-ratio: 1;
+  animation: bounce 1.1s ease infinite;
+  line-height: 0;
+
+  &:nth-child(2) {
+    animation-delay: 0.5s;
+  }
+  &:nth-child(3) {
+    animation-delay: 1s;
+  }
+}
+
+@keyframes bounce {
+  70% {
+    transform: translateY(0%);
+  }
+  80% {
+    transform: translateY(-5px);
+  }
+  90% {
+    transform: translateY(0%);
+  }
+  95% {
+    transform: translateY(-7%);
+  }
+  97% {
+    transform: translateY(0%);
+  }
+  99% {
+    transform: translateY(-3%);
+  }
+  100% {
+    transform: translateY(0);
+  }
 }

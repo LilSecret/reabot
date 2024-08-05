@@ -8,10 +8,12 @@ import { TMessage } from "./types";
 import toast from "react-hot-toast";
 import ReabotBtn from "./components/Reabot/ReabotBtn";
 import askOpenAI from "./OpenAPI";
+import ReabotLoading from "./components/Reabot/ReabotLoading";
 
 function App() {
   const [reabotActive, setReabotActive] = useState(false);
   const [messages, setMessages] = useState<TMessage[]>([]);
+  const [isReabotLoading, setIsReabotLoading] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [formIsSubmitted, setFormIsSubmitted] = useState(false);
 
@@ -22,12 +24,14 @@ function App() {
 
   const handleForm = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setFormIsSubmitted(true);
 
     if (isInputValueError) {
       toast.error("Your message is to short");
       return;
     }
+
+    setFormIsSubmitted(true);
+    setIsReabotLoading(true);
 
     setMessages((prevItems) => [
       ...prevItems,
@@ -36,16 +40,20 @@ function App() {
 
     setInputValue("");
 
-    askOpenAI(inputValue).then((response) => {
-      if (typeof response !== "string") {
-        throw new Error("response is not a string");
-      }
+    askOpenAI(inputValue)
+      .then((response) => {
+        if (typeof response !== "string") {
+          throw new Error("response is not a string");
+        }
 
-      setMessages((prevItems) => [
-        ...prevItems,
-        { type: "Bot", content: response },
-      ]);
-    });
+        setMessages((prevItems) => [
+          ...prevItems,
+          { type: "Bot", content: response },
+        ]);
+      })
+      .finally(() => {
+        setIsReabotLoading(false);
+      });
   };
 
   useEffect(() => {
@@ -77,20 +85,23 @@ function App() {
           <h3 className="header-title">ReaBot</h3>
         </header>
         <div className="reabot-content">
-          {messages.map((message, index) => {
-            return message.type === "Bot" ? (
-              <BotMessagesWrapper key={index}>
-                <Message type={message.type}>{message.content}</Message>
-              </BotMessagesWrapper>
-            ) : (
-              <Message key={index} type={message.type}>
-                {message.content}
-              </Message>
-            );
-          })}
+          <div className="chat-logs">
+            {messages.map((message, index) => {
+              return message.type === "Bot" ? (
+                <BotMessagesWrapper key={index}>
+                  <Message type={message.type}>{message.content}</Message>
+                </BotMessagesWrapper>
+              ) : (
+                <Message key={index} type={message.type}>
+                  {message.content}
+                </Message>
+              );
+            })}
+          </div>
           <div className="end-of-chat" ref={endOfChatRef}>
             End of Chat
           </div>
+          {isReabotLoading && <ReabotLoading />}
         </div>
         <form
           className="reabot-form"
