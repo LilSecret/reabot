@@ -160,6 +160,7 @@
 
 .end-of-chat {
   display: inline-block;
+  font-size: 5px;
   color: transparent;
   width: 100%;
 }

@@ -16,14 +16,9 @@ function App() {
   const [formIsSubmitted, setFormIsSubmitted] = useState(false);
 
   const endOfChatRef = createRef<HTMLDivElement>();
+  const inputRef = createRef<HTMLInputElement>();
 
   const isInputValueError = inputValue.length < 5 && formIsSubmitted;
-
-  const scrollToLastMessage = () => {
-    endOfChatRef.current?.scrollIntoView({
-      behavior: "smooth",
-    });
-  };
 
   const handleForm = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -60,8 +55,10 @@ function App() {
   }, []);
 
   useEffect(() => {
-    scrollToLastMessage();
-  }, [messages, scrollToLastMessage]);
+    endOfChatRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
+  }, [messages, endOfChatRef]);
 
   return (
     <>
@@ -75,9 +72,6 @@ function App() {
               className="header-img"
               src="/reabot-profile.png"
               alt="reabot profile"
-              onClick={() => {
-                scrollToLastMessage();
-              }}
             />
           </div>
           <h3 className="header-title">ReaBot</h3>
@@ -89,15 +83,24 @@ function App() {
                 <Message type={message.type}>{message.content}</Message>
               </BotMessagesWrapper>
             ) : (
-              <Message type={message.type}>{message.content}</Message>
+              <Message key={index} type={message.type}>
+                {message.content}
+              </Message>
             );
           })}
           <div className="end-of-chat" ref={endOfChatRef}>
             End of Chat
           </div>
         </div>
-        <form className="reabot-form" onSubmit={handleForm}>
+        <form
+          className="reabot-form"
+          onSubmit={handleForm}
+          onClick={() => {
+            inputRef.current?.focus();
+          }}
+        >
           <input
+            ref={inputRef}
             className="user-input"
             type="text"
             onChange={(e) => {
