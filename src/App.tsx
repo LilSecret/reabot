@@ -4,23 +4,92 @@ import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 import { createRef, FormEvent, useEffect, useState } from "react";
 import BotMessagesWrapper from "./components/Message/BotMessagesWrapper";
 import Message from "./components/Message/Message";
-import { TMessage } from "./types";
+import { TFormRequest, TMessage, TUserInfo } from "./types";
 import toast from "react-hot-toast";
 import ReabotBtn from "./components/Reabot/ReabotBtn";
-import askOpenAI from "./OpenAPI";
+import { LLM, LLMProperty } from "./llm";
 import ReabotLoading from "./components/Reabot/ReabotLoading";
+import { isEmailValid } from "./validations";
+import OtherTopics from "./components/Reabot/OtherTopics";
 
 function App() {
+  const [user, setUser] = useState<TUserInfo | null>();
   const [reabotActive, setReabotActive] = useState(false);
   const [messages, setMessages] = useState<TMessage[]>([]);
   const [isReabotLoading, setIsReabotLoading] = useState(false);
-  const [inputValue, setInputValue] = useState("");
   const [formIsSubmitted, setFormIsSubmitted] = useState(false);
+  const [visibleOtherTopics, setVisibleOtherTopics] = useState(true);
+  const [inputValue, setInputValue] = useState("");
+  const [formRequest, setFormRequest] =
+    useState<TFormRequest>("PropertyLookup");
 
   const endOfChatRef = createRef<HTMLDivElement>();
   const inputRef = createRef<HTMLInputElement>();
 
   const isInputValueError = inputValue.length < 5 && formIsSubmitted;
+
+  const handleLLMRequest = (property: LLMProperty) => {
+    return LLM[property](inputValue).then((response) => {
+      if (typeof response !== "string") {
+        throw new Error("response is not a string");
+      }
+
+      setMessages((prevItems) => [
+        ...prevItems,
+        { type: "Bot", content: response },
+      ]);
+    });
+  };
+
+  const handleSetInfo = () => {
+    const messageLength = messages.length;
+
+    if (messageLength === 1) {
+      setUser({ email: undefined, name: inputValue });
+      setMessages((preValues) => {
+        return [
+          ...preValues,
+          {
+            type: "Bot",
+            content: "Thank you! What is your email address?",
+          },
+        ];
+      });
+    } else if (messageLength === 2 || typeof user?.email === "undefined") {
+      if (typeof user?.name !== "string") {
+        throw new Error("user name is not set");
+      }
+
+      const validEmail = isEmailValid(inputValue);
+
+      if (!validEmail) {
+        setMessages((preValues) => {
+          return [
+            ...preValues,
+            {
+              type: "Bot",
+              content: "That is an invalid Email. Please try again.",
+            },
+          ];
+        });
+      }
+
+      if (validEmail) {
+        setMessages((preValues) => {
+          return [
+            ...preValues,
+            {
+              type: "Bot",
+              content: `Thank You ${user.name}! What brings you here?`,
+            },
+          ];
+        });
+
+        setUser({ name: user.name, email: inputValue });
+        setFormRequest("Chat");
+      }
+    }
+  };
 
   const handleForm = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -31,34 +100,54 @@ function App() {
     }
 
     setFormIsSubmitted(true);
-    setIsReabotLoading(true);
 
     setMessages((prevItems) => [
       ...prevItems,
       { type: "User", content: inputValue },
     ]);
 
+    switch (formRequest) {
+      case "SetPersonalInfo":
+        handleSetInfo();
+        break;
+      case "AreaPOI":
+        setIsReabotLoading(true);
+        handleLLMRequest("parsePropertyPOI").finally(() => {
+          setIsReabotLoading(false);
+        });
+        break;
+      case "Chat":
+        setIsReabotLoading(true);
+        handleLLMRequest("askOpenAI").finally(() => {
+          setIsReabotLoading(false);
+        });
+        break;
+      case "Joke":
+        setIsReabotLoading(true);
+        handleLLMRequest("askComedyJoke").finally(() => {
+          setIsReabotLoading(false);
+        });
+        break;
+      case "PropertyLookup":
+        setIsReabotLoading(true);
+        handleLLMRequest("parsePropertyDetails").finally(() => {
+          setIsReabotLoading(false);
+        });
+        break;
+
+      default:
+        throw new Error("form request in invalid");
+    }
     setInputValue("");
-
-    askOpenAI(inputValue)
-      .then((response) => {
-        if (typeof response !== "string") {
-          throw new Error("response is not a string");
-        }
-
-        setMessages((prevItems) => [
-          ...prevItems,
-          { type: "Bot", content: response },
-        ]);
-      })
-      .finally(() => {
-        setIsReabotLoading(false);
-      });
   };
 
   useEffect(() => {
     setMessages([
-      { type: "Bot", content: "Hello I'm ReaBot. How may I assist You?" },
+      {
+        type: "Bot",
+        content:
+          "Hello I'm ReaBot your AI Assistant. Please provide your name?",
+      },
     ]);
   }, []);
 
@@ -98,6 +187,7 @@ function App() {
               );
             })}
           </div>
+          {visibleOtherTopics && <OtherTopics />}
           <div className="end-of-chat" ref={endOfChatRef}>
             End of Chat
           </div>
