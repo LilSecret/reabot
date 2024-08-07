@@ -6,7 +6,7 @@
   position: absolute;
   transform: scale(0);
   right: -150px;
-  transition: 400ms ease;
+  transition: 300ms ease;
   bottom: -220px;
 
   &.active {
