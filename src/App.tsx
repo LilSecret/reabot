@@ -62,7 +62,6 @@ function App() {
       } as TAddress;
       dispatch(setUserLocation(location));
       handleLLMRequest(location);
-      console.log(location);
     }
   };
 
@@ -88,16 +87,18 @@ function App() {
           })
           .finally(() => {
             dispatch(toggleReabotLoading(false));
-          })
-          .catch((error) => {
-            throw new Error(error);
           });
         break;
       case "AreaPOI":
         dispatch(toggleReabotLoading(true));
-        handleLLMLocationRequest("parserPropertyPOI", location).finally(() => {
-          dispatch(toggleReabotLoading(false));
-        });
+        handleLLMLocationRequest("parserPropertyPOI", location)
+          .then(() => {
+            bringReabotBackToChat();
+            dispatch(setUserLocation(null));
+          })
+          .finally(() => {
+            dispatch(toggleReabotLoading(false));
+          });
         break;
 
       default:

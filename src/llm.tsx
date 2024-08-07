@@ -46,7 +46,7 @@ async function parserPropertyDetails(property: TAddress) {
   const structuredProperty = await callStructuredParserPropertyDetails(object);
 
   const chatResponse = askOpenAI(
-    "tell me the this house objects information " +
+    "tell me this house objects information " +
       JSON.stringify(structuredProperty)
   );
 
@@ -56,35 +56,27 @@ async function parserPropertyDetails(property: TAddress) {
 async function parserPropertyPOI(property: TAddress) {
   const { address1, address2 } = property;
 
-  const object = {
-    business_category: "BANKS - FINANCIAL",
-    city: "New York",
-    distance: "0.01",
-    franchise: "",
-    geo_latitude: "40.707595",
-    geo_longitude: "-74.011172",
-    geo_match: "S5",
-    industry: "BANKS",
-    lob: "BANKS",
-    name: "State Export Import Bank",
-    ob_id: "10139302",
-    phone: "212-618-1258",
-    primary: "PRIMARY",
-    state: "NY",
-    street: "14 Wall St # 20",
-    type: "POI",
-    unit: "0",
-    zip_code: "10005",
-  };
+  const connectedAddress = address1 + ", " + address2;
+  const poiParsedLocations = [];
 
-  const structuredPOI = await callStructuredParserPropertyPOI(object);
+  const response = await ATTOM_API.getPropertyPOI(connectedAddress);
+  const poiLocations = response.poi;
 
-  console.log(structuredPOI);
+  for (const poiLocation of poiLocations) {
+    const parsedLocation = await callStructuredParserPropertyPOI(poiLocation);
 
-  return "Howdy Do";
+    poiParsedLocations.push(parsedLocation);
+  }
+
+  console.log(poiParsedLocations);
+
+  const openAIChatResponse = askOpenAI(
+    "tell me each of these near by points of interests objects received from a location that user submitted" +
+      JSON.stringify(poiParsedLocations)
+  );
+
+  return openAIChatResponse;
 }
-
-// async function callStructuredParser() {}
 
 export const LLM_STRING = {
   askOpenAI,

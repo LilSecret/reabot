@@ -30,14 +30,19 @@ async function getPropertyDetailsById(id: number) {
     });
 }
 
-async function getPropertyPOI() {
-  return fetch(`${url}`, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      apikey: import.meta.env.VITE_ATTOM_KEY,
-    },
-  }).then((response) => response.json());
+async function getPropertyPOI(address: string) {
+  return fetch(
+    `https://api.gateway.attomdata.com/v4/neighborhood/poi?address=${encodeURIComponent(
+      address
+    )}&radius=5&categoryName=PERSONAL%20SERVICES`,
+    {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        apikey: import.meta.env.VITE_ATTOM_KEY,
+      },
+    }
+  ).then((response) => response.json());
 }
 
 export const ATTOM_API = {

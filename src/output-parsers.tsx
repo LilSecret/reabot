@@ -53,13 +53,9 @@ export async function callStructuredParserPropertyPOI(object: object) {
 
   const outputParserPropertyPOI =
     StructuredOutputParser.fromNamesAndDescriptions({
-      name: "object > name",
-      poiCategory: "object > business_category",
-      industry: "object > industry",
-      phoneNumber: "object > phone",
-      city: "object > city",
-      streetAddress: "object > street",
-      zipCode: "object > zip_code",
+      name: "object > businessLocation > businessStandardName",
+      address: "object > businessLocation > address",
+      industry: "object > category > industry",
     });
 
   const chain = prompt.pipe(model).pipe(outputParserPropertyPOI);
