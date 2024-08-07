@@ -4,10 +4,15 @@ import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 import { createRef, FormEvent, useEffect } from "react";
 import BotMessagesWrapper from "./components/Message/BotMessagesWrapper";
 import Message from "./components/Message/Message";
-import { RootState } from "./types";
+import { RootState, TAddress } from "./types";
 import toast from "react-hot-toast";
 import ReabotBtn from "./components/Reabot/ReabotBtn";
-import { LLM, LLMProperty } from "./llm";
+import {
+  LLM_LOCATE,
+  LLM_STRING,
+  LLMLocateProperty,
+  LLMStringProperty,
+} from "./llm";
 import ReabotLoading from "./components/Reabot/ReabotLoading";
 import { isEmailValid } from "./validations";
 import OtherTopics from "./components/Reabot/OtherTopics";
@@ -22,7 +27,7 @@ import {
   toggleIsOtherTopicsVisible,
   toggleReabotLoading,
 } from "./state/reabot/reabotSlice";
-import { setUserInfo } from "./state/user/userSlice";
+import { setUserInfo, setUserLocation } from "./state/user/userSlice";
 
 function App() {
   const { reabotUserInput, isFormSubmitted, reabotRequest } = useSelector(
@@ -30,7 +35,9 @@ function App() {
   );
   const { messages, isReabotLoading, isOtherTopicsVisible, isReabotActive } =
     useSelector((state: RootState) => state.reabot);
-  const { user } = useSelector((state: RootState) => state.userInfo);
+  const { user, userLocation, userLookupAction } = useSelector(
+    (state: RootState) => state.userInfo
+  );
 
   const dispatch = useDispatch();
 
@@ -39,14 +46,98 @@ function App() {
 
   const isInputValueError = reabotUserInput.length < 5 && isFormSubmitted;
 
-  const handleLLMRequest = (property: LLMProperty) => {
-    return LLM[property](reabotUserInput).then((response) => {
-      if (typeof response !== "string") {
-        throw new Error("response is not a string");
-      }
+  const setUpLocation = () => {
+    if (!userLocation) {
+      dispatch(setUserLocation({ address1: reabotUserInput }));
+      dispatch(
+        addMessage({
+          type: "Bot",
+          content: "What is the city and state location? Example: Denver, CO",
+        })
+      );
+    } else if (userLocation.address2 === undefined) {
+      const location = {
+        address2: reabotUserInput,
+        ...userLocation,
+      } as TAddress;
+      dispatch(setUserLocation(location));
+      handleLLMRequest(location);
+      console.log(location);
+    }
+  };
 
-      dispatch(addMessage({ type: "Bot", content: response }));
-    });
+  const bringReabotBackToChat = () => {
+    dispatch(changeReabotRequest("Chat"));
+    dispatch(toggleIsOtherTopicsVisible(true));
+    dispatch(
+      addMessage({
+        type: "Bot",
+        content: "What else can I do for you?",
+      })
+    );
+  };
+
+  const handleLLMRequest = (location: TAddress) => {
+    switch (userLookupAction) {
+      case "PropertyLookup":
+        dispatch(toggleReabotLoading(true));
+        handleLLMLocationRequest("parserPropertyDetails", location)
+          .then(() => {
+            bringReabotBackToChat();
+            dispatch(setUserLocation(null));
+          })
+          .finally(() => {
+            dispatch(toggleReabotLoading(false));
+          })
+          .catch((error) => {
+            throw new Error(error);
+          });
+        break;
+      case "AreaPOI":
+        dispatch(toggleReabotLoading(true));
+        handleLLMLocationRequest("parserPropertyPOI", location).finally(() => {
+          dispatch(toggleReabotLoading(false));
+        });
+        break;
+
+      default:
+        throw new Error("The LLM handle request is invalid");
+        break;
+    }
+  };
+
+  const handleLLMLocationRequest = (
+    property: LLMLocateProperty,
+    location: TAddress
+  ) => {
+    return LLM_LOCATE[property](location)
+      .then((response) => {
+        if (typeof response !== "string") {
+          throw new Error("response is not a string");
+        }
+
+        dispatch(addMessage({ type: "Bot", content: response }));
+      })
+      .catch((error) => {
+        dispatch(addMessage({ type: "Bot", content: error }));
+      });
+  };
+
+  const handleLLMStringRequest = (
+    property: LLMStringProperty,
+    input: string
+  ) => {
+    return LLM_STRING[property](input)
+      .then((response) => {
+        if (typeof response !== "string") {
+          throw new Error("response is not a string");
+        }
+
+        dispatch(addMessage({ type: "Bot", content: response }));
+      })
+      .catch((error) => {
+        dispatch(addMessage({ type: "Bot", content: error }));
+      });
   };
 
   const handleSetInfo = () => {
@@ -107,29 +198,41 @@ function App() {
       case "SetPersonalInfo":
         handleSetInfo();
         break;
-      case "AreaPOI":
-        dispatch(toggleReabotLoading(true));
-        handleLLMRequest("parsePropertyPOI").finally(() => {
-          dispatch(toggleReabotLoading(false));
-        });
-        break;
       case "Chat":
         dispatch(toggleReabotLoading(true));
-        handleLLMRequest("askOpenAI").finally(() => {
-          dispatch(toggleReabotLoading(false));
-        });
+        handleLLMStringRequest("askOpenAI", reabotUserInput)
+          .then(() => {
+            dispatch(toggleIsOtherTopicsVisible(false));
+          })
+          .finally(() => {
+            dispatch(toggleReabotLoading(false));
+          });
         break;
       case "Joke":
         dispatch(toggleReabotLoading(true));
-        handleLLMRequest("askComedyJoke").finally(() => {
-          dispatch(toggleReabotLoading(false));
-        });
+        handleLLMStringRequest("askComedyJoke", reabotUserInput)
+          .then(() => {
+            dispatch(changeReabotRequest("Chat"));
+            dispatch(toggleIsOtherTopicsVisible(true));
+          })
+          .finally(() => {
+            dispatch(toggleReabotLoading(false));
+          });
         break;
-      case "PropertyLookup":
-        dispatch(toggleReabotLoading(true));
-        handleLLMRequest("parsePropertyDetails").finally(() => {
-          dispatch(toggleReabotLoading(false));
-        });
+      // case "AreaPOI":
+      //   dispatch(toggleReabotLoading(true));
+      //   handleLLMLocateRequest("parserPropertyPOI", location).finally(() => {
+      //     dispatch(toggleReabotLoading(false));
+      //   });
+      //   break;
+      // case "PropertyLookup":
+      //   dispatch(toggleReabotLoading(true));
+      //   handleLLMLocateRequest("parsePropertyDetails").finally(() => {
+      //     dispatch(toggleReabotLoading(false));
+      //   });
+      //   break;
+      case "SetLocation":
+        setUpLocation();
         break;
 
       default:

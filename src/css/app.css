@@ -188,15 +188,22 @@
 
 .other-topics {
   margin-block: 12px 25px;
-  gap: 3px;
+  gap: 5px;
   display: flex;
   align-items: start;
   cursor: pointer;
   flex-direction: column;
 }
 
+.topic-span {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
 .topic {
   border-radius: 4px;
+  cursor: pointer;
+  border: none;
   padding: 6px 8px;
   display: inline-block;
   outline: solid 1px var(--clr-accent-400);

@@ -22,7 +22,7 @@ export type TFormRequest =
   | "AreaPOI"
   | "Chat"
   | "Joke"
-  | "Parser";
+  | "SetLocation";
 
 export type TMessage = {
   type: TMessageType;

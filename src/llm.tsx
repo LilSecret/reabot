@@ -5,6 +5,8 @@ import {
   callStructuredParserPropertyPOI,
 } from "./output-parsers";
 import { ATTOM_API } from "./ATTOMAPI";
+import { useDispatch } from "react-redux";
+import { TAddress } from "./types";
 
 const model = new ChatOpenAI({
   openAIApiKey: import.meta.env.VITE_OPEN_AI_KEY,
@@ -17,8 +19,6 @@ const model = new ChatOpenAI({
 async function askComedyJoke(word: string) {
   const response = await jokeChain.invoke({ input: word });
 
-  console.log(response);
-
   return response.content;
 }
 
@@ -27,35 +27,35 @@ async function askOpenAI(question: string) {
   return response.content;
 }
 
-async function parser(word: string) {
-  const response = await jokeChain.invoke({ input: word });
+// async function parser(word: string) {
+//   const response = await jokeChain.invoke({ input: word });
 
-  console.log(response);
+//   console.log(response);
 
-  return response;
-}
+//   return response;
+// }
 
-async function parsePropertyDetails(house: string) {
+async function parserPropertyDetails(property: TAddress) {
+  const { address1, address2 } = property;
+
   const object = await ATTOM_API.getPropertyDetailsByAddress(
-    "4529 Winona Court",
-    "Denver, CO"
+    address1,
+    address2
   );
-
-  const endpoint = await ATTOM_API.getPropertyPOI();
-
-  console.log(endpoint);
 
   const structuredProperty = await callStructuredParserPropertyDetails(object);
 
   const chatResponse = askOpenAI(
-    "list the important factors of this object: " +
+    "tell me the this house objects information " +
       JSON.stringify(structuredProperty)
   );
 
   return chatResponse;
 }
 
-async function parsePropertyPOI(house: string) {
+async function parserPropertyPOI(property: TAddress) {
+  const { address1, address2 } = property;
+
   const object = {
     business_category: "BANKS - FINANCIAL",
     city: "New York",
@@ -86,12 +86,15 @@ async function parsePropertyPOI(house: string) {
 
 // async function callStructuredParser() {}
 
-export const LLM = {
+export const LLM_STRING = {
   askOpenAI,
   askComedyJoke,
-  parser,
-  parsePropertyDetails,
-  parsePropertyPOI,
 };
 
-export type LLMProperty = keyof typeof LLM;
+export const LLM_LOCATE = {
+  parserPropertyDetails,
+  parserPropertyPOI,
+};
+
+export type LLMStringProperty = keyof typeof LLM_STRING;
+export type LLMLocateProperty = keyof typeof LLM_LOCATE;
