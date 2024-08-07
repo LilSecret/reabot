@@ -9,7 +9,7 @@ async function getPropertyDetailsByAddress(address1: string, address2: string) {
       method: "GET",
       headers: {
         Accept: "application/json",
-        apikey: "4219bcc1e13779b2f2eb067ede54f79c",
+        apikey: import.meta.env.VITE_ATTOM_KEY,
       },
     }
   ).then((response) => response.json());
@@ -20,7 +20,7 @@ async function getPropertyDetailsById(id: number) {
     method: "GET",
     headers: {
       Accept: "application/json",
-      apikey: "4219bcc1e13779b2f2eb067ede54f79c",
+      apikey: import.meta.env.VITE_ATTOM_KEY,
     },
   })
     .then((response) => response.json())
@@ -35,7 +35,7 @@ async function getPropertyPOI() {
     method: "GET",
     headers: {
       Accept: "application/json",
-      apikey: "4219bcc1e13779b2f2eb067ede54f79c",
+      apikey: import.meta.env.VITE_ATTOM_KEY,
     },
   }).then((response) => response.json());
 }

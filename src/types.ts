@@ -1,3 +1,7 @@
+import { ReabotFormState } from "./state/reabot/reabotFormSlice";
+import { ReabotState } from "./state/reabot/reabotSlice";
+import { UserInfoState } from "./state/user/userSlice";
+
 export type TMessageType = "Bot" | "User";
 
 export type TAddress = {
@@ -23,4 +27,10 @@ export type TFormRequest =
 export type TMessage = {
   type: TMessageType;
   content: string;
+};
+
+export type RootState = {
+  reabot: ReabotState;
+  reabotForm: ReabotFormState;
+  userInfo: UserInfoState;
 };

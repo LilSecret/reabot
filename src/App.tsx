@@ -1,43 +1,51 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./css/app.css";
 import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
-import { createRef, FormEvent, useEffect, useState } from "react";
+import { createRef, FormEvent, useEffect } from "react";
 import BotMessagesWrapper from "./components/Message/BotMessagesWrapper";
 import Message from "./components/Message/Message";
-import { TFormRequest, TMessage, TUserInfo } from "./types";
+import { RootState } from "./types";
 import toast from "react-hot-toast";
 import ReabotBtn from "./components/Reabot/ReabotBtn";
 import { LLM, LLMProperty } from "./llm";
 import ReabotLoading from "./components/Reabot/ReabotLoading";
 import { isEmailValid } from "./validations";
 import OtherTopics from "./components/Reabot/OtherTopics";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  changeReabotRequest,
+  setUserInput,
+  toggleIsFormSubmitted,
+} from "./state/reabot/reabotFormSlice";
+import {
+  addMessage,
+  toggleIsOtherTopicsVisible,
+  toggleReabotLoading,
+} from "./state/reabot/reabotSlice";
+import { setUserInfo } from "./state/user/userSlice";
 
 function App() {
-  const [user, setUser] = useState<TUserInfo | null>();
-  const [reabotActive, setReabotActive] = useState(false);
-  const [messages, setMessages] = useState<TMessage[]>([]);
-  const [isReabotLoading, setIsReabotLoading] = useState(false);
-  const [formIsSubmitted, setFormIsSubmitted] = useState(false);
-  const [visibleOtherTopics, setVisibleOtherTopics] = useState(true);
-  const [inputValue, setInputValue] = useState("");
-  const [formRequest, setFormRequest] =
-    useState<TFormRequest>("PropertyLookup");
+  const { reabotUserInput, isFormSubmitted, reabotRequest } = useSelector(
+    (state: RootState) => state.reabotForm
+  );
+  const { messages, isReabotLoading, isOtherTopicsVisible, isReabotActive } =
+    useSelector((state: RootState) => state.reabot);
+  const { user } = useSelector((state: RootState) => state.userInfo);
+
+  const dispatch = useDispatch();
 
   const endOfChatRef = createRef<HTMLDivElement>();
   const inputRef = createRef<HTMLInputElement>();
 
-  const isInputValueError = inputValue.length < 5 && formIsSubmitted;
+  const isInputValueError = reabotUserInput.length < 5 && isFormSubmitted;
 
   const handleLLMRequest = (property: LLMProperty) => {
-    return LLM[property](inputValue).then((response) => {
+    return LLM[property](reabotUserInput).then((response) => {
       if (typeof response !== "string") {
         throw new Error("response is not a string");
       }
 
-      setMessages((prevItems) => [
-        ...prevItems,
-        { type: "Bot", content: response },
-      ]);
+      dispatch(addMessage({ type: "Bot", content: response }));
     });
   };
 
@@ -45,48 +53,40 @@ function App() {
     const messageLength = messages.length;
 
     if (messageLength === 1) {
-      setUser({ email: undefined, name: inputValue });
-      setMessages((preValues) => {
-        return [
-          ...preValues,
-          {
-            type: "Bot",
-            content: "Thank you! What is your email address?",
-          },
-        ];
-      });
+      dispatch(setUserInfo({ name: reabotUserInput }));
+      dispatch(
+        addMessage({
+          type: "Bot",
+          content: `What is your email address?`,
+        })
+      );
     } else if (messageLength === 2 || typeof user?.email === "undefined") {
       if (typeof user?.name !== "string") {
         throw new Error("user name is not set");
       }
 
-      const validEmail = isEmailValid(inputValue);
+      const validEmail = isEmailValid(reabotUserInput);
 
       if (!validEmail) {
-        setMessages((preValues) => {
-          return [
-            ...preValues,
-            {
-              type: "Bot",
-              content: "That is an invalid Email. Please try again.",
-            },
-          ];
-        });
+        dispatch(
+          addMessage({
+            type: "Bot",
+            content: "That is an invalid Email. Please try again.",
+          })
+        );
       }
 
       if (validEmail) {
-        setMessages((preValues) => {
-          return [
-            ...preValues,
-            {
-              type: "Bot",
-              content: `Thank You ${user.name}! What brings you here?`,
-            },
-          ];
-        });
+        dispatch(
+          addMessage({
+            type: "Bot",
+            content: `Thank You ${user.name}! What brings you here?`,
+          })
+        );
 
-        setUser({ name: user.name, email: inputValue });
-        setFormRequest("Chat");
+        dispatch(setUserInfo({ name: user.name, email: reabotUserInput }));
+        dispatch(changeReabotRequest("Chat"));
+        dispatch(toggleIsOtherTopicsVisible(true));
       }
     }
   };
@@ -99,57 +99,44 @@ function App() {
       return;
     }
 
-    setFormIsSubmitted(true);
+    dispatch(toggleIsFormSubmitted(true));
 
-    setMessages((prevItems) => [
-      ...prevItems,
-      { type: "User", content: inputValue },
-    ]);
+    dispatch(addMessage({ type: "User", content: reabotUserInput }));
 
-    switch (formRequest) {
+    switch (reabotRequest) {
       case "SetPersonalInfo":
         handleSetInfo();
         break;
       case "AreaPOI":
-        setIsReabotLoading(true);
+        dispatch(toggleReabotLoading(true));
         handleLLMRequest("parsePropertyPOI").finally(() => {
-          setIsReabotLoading(false);
+          dispatch(toggleReabotLoading(false));
         });
         break;
       case "Chat":
-        setIsReabotLoading(true);
+        dispatch(toggleReabotLoading(true));
         handleLLMRequest("askOpenAI").finally(() => {
-          setIsReabotLoading(false);
+          dispatch(toggleReabotLoading(false));
         });
         break;
       case "Joke":
-        setIsReabotLoading(true);
+        dispatch(toggleReabotLoading(true));
         handleLLMRequest("askComedyJoke").finally(() => {
-          setIsReabotLoading(false);
+          dispatch(toggleReabotLoading(false));
         });
         break;
       case "PropertyLookup":
-        setIsReabotLoading(true);
+        dispatch(toggleReabotLoading(true));
         handleLLMRequest("parsePropertyDetails").finally(() => {
-          setIsReabotLoading(false);
+          dispatch(toggleReabotLoading(false));
         });
         break;
 
       default:
         throw new Error("form request in invalid");
     }
-    setInputValue("");
+    dispatch(setUserInput(""));
   };
-
-  useEffect(() => {
-    setMessages([
-      {
-        type: "Bot",
-        content:
-          "Hello I'm ReaBot your AI Assistant. Please provide your name?",
-      },
-    ]);
-  }, []);
 
   useEffect(() => {
     endOfChatRef.current?.scrollIntoView({
@@ -160,7 +147,7 @@ function App() {
   return (
     <>
       <div
-        className={`reabot-container ${reabotActive ? "active" : ""}`}
+        className={`reabot-container ${isReabotActive ? "active" : ""}`}
         id="reabot-window"
       >
         <header className="reabot-header">
@@ -187,7 +174,7 @@ function App() {
               );
             })}
           </div>
-          {visibleOtherTopics && <OtherTopics />}
+          {isOtherTopicsVisible && <OtherTopics />}
           <div className="end-of-chat" ref={endOfChatRef}>
             End of Chat
           </div>
@@ -205,10 +192,10 @@ function App() {
             className="user-input"
             type="text"
             onChange={(e) => {
-              setInputValue(e.target.value);
+              dispatch(setUserInput(e.target.value));
             }}
             placeholder="Enter your message"
-            value={inputValue}
+            value={reabotUserInput}
             data-error={isInputValueError}
           />
           <button className="reabot-form-btn" type="submit">
@@ -217,10 +204,7 @@ function App() {
         </form>
       </div>
 
-      <ReabotBtn
-        reabotActive={reabotActive}
-        setReabotActive={setReabotActive}
-      />
+      <ReabotBtn />
     </>
   );
 }
